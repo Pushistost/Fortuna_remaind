@@ -52,7 +52,7 @@ __pypackages__/
 # Environments
 .venv
 env/
-venv/
+../venv/
 ENV/
 env.bak/
 venv.bak/
