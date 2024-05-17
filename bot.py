@@ -3,6 +3,7 @@ import logging
 
 import betterlogging as bl
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
@@ -10,6 +11,7 @@ from tgbot.config import load_config, Config
 from tgbot.handlers import routers_list
 from tgbot.middlewares.config import ConfigMiddleware
 from tgbot.services import broadcaster
+from tgbot.services.commands_menu import set_all_chat_admins_commands
 
 
 async def on_startup(bot: Bot, admin_ids: list[int]):
@@ -83,19 +85,23 @@ def get_storage(config):
         return MemoryStorage()
 
 
+# async def set_all_default_commands(bot: Bot):
+#     await set_all_chat_admins_commands(bot)
+
+
 async def main():
     setup_logging()
 
     config = load_config(".env")
     storage = get_storage(config)
 
-    bot = Bot(token=config.tg_bot.token, parse_mode="HTML")
+    bot = Bot(token=config.tg_bot.token, default=DefaultBotProperties(parse_mode="HTML"))
     dp = Dispatcher(storage=storage)
 
     dp.include_routers(*routers_list)
 
     register_global_middlewares(dp, config)
-
+    # await set_all_default_commands(bot)
     await on_startup(bot, config.tg_bot.admin_ids)
     await dp.start_polling(bot)
 
@@ -104,4 +110,4 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
-        logging.error("Бот був вимкнений!")
+        logging.error("Бот был выключен!")
