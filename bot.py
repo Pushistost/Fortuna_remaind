@@ -7,11 +7,11 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
+from models import make_base
 from tgbot.config import load_config, Config
-from tgbot.handlers import routers_list
+from tgbot.handlers import routers_list, admin_router
 from tgbot.middlewares.config import ConfigMiddleware
 from tgbot.services import broadcaster
-from tgbot.services.commands_menu import set_all_chat_admins_commands
 
 
 async def on_startup(bot: Bot, admin_ids: list[int]):
@@ -33,7 +33,6 @@ def register_global_middlewares(dp: Dispatcher, config: Config, session_pool=Non
         ConfigMiddleware(config),
         # DatabaseMiddleware(session_pool),
     ]
-
     for middleware_type in middleware_types:
         dp.message.outer_middleware(middleware_type)
         dp.callback_query.outer_middleware(middleware_type)
@@ -91,13 +90,12 @@ def get_storage(config):
 
 async def main():
     setup_logging()
-
+    await make_base()
     config = load_config(".env")
     storage = get_storage(config)
 
     bot = Bot(token=config.tg_bot.token, default=DefaultBotProperties(parse_mode="HTML"))
     dp = Dispatcher(storage=storage)
-
     dp.include_routers(*routers_list)
 
     register_global_middlewares(dp, config)

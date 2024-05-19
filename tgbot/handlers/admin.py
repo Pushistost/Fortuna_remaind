@@ -1,4 +1,5 @@
 import re
+
 from aiogram import Router
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
@@ -7,9 +8,12 @@ from aiogram.types import Message, BotCommandScopeChat, BotCommandScopeAllPrivat
 from aiogram import F
 
 from tgbot.filters.admin import AdminFilter
-from tgbot.keyboards.inline import yes_or_no_keyboard
 from tgbot.keyboards.reply import start_menu
 from tgbot.middlewares.states import AddEntry
+import tgbot.keyboards.inline as kb
+
+
+import requests as rq
 
 admin_router = Router()
 admin_router.message.filter(AdminFilter())
@@ -17,6 +21,7 @@ admin_router.message.filter(AdminFilter())
 
 @admin_router.message(CommandStart())
 async def admin_start(message: Message):
+    await rq.set_user(message.from_user.id)
     await message.answer("Ну здравствуй, Отец", reply_markup=start_menu)
 
 
@@ -29,12 +34,14 @@ async def start_add_remind(message: Message, state: FSMContext):
 
 @admin_router.message(AddEntry, F.text.as_("remind"))
 async def check_remind(message: Message, state: FSMContext, remind: str):
+
     preparing_to_add = re.split(r"[ |\n]", remind, maxsplit=1)
+
     if len(preparing_to_add) == 2 and preparing_to_add[0].isdigit():
         await state.update_data(time=preparing_to_add[0])
         await state.update_data(remind=preparing_to_add[1])
-        await message.answer(f"part 1: {preparing_to_add[0]}, \npart 2: {preparing_to_add[1]} добавляем",
-                             reply_markup=yes_or_no_keyboard())
+        await message.answer(f"part 1: {preparing_to_add[0]}, \npart 2: {preparing_to_add[1]}",
+                             reply_markup=await kb.yes_or_no_keyboard())
     else:
         await message.answer("Неверный ввод данных, попробуйте еще")
         await start_add_remind(message, state)
@@ -48,8 +55,14 @@ async def add_remind(query: CallbackQuery, state: FSMContext):
 # Part of View DATA
 @admin_router.message(F.text == "Показать записи")
 async def view_remind(message: Message, state: FSMContext):
-    await message.answer("Достаем из БД записи с пагинацией по 5 шт")
-    pass
+    await message.answer("Достаем из БД записи с пагинацией по 5 шт", reply_markup=await kb.categories())
+
+
+@admin_router.callback_query(F.data.startswitch("category_"))
+async def category(callback: CallbackQuery):
+    await callback.answer("Вы выбрали категорию")
+    await callback.message.answer("Выберите товар по категории",
+                                  reply_markup=await kb.items(callback.data.split("_")[1]))
 
 
 # Part of Delete DATA

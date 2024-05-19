@@ -37,6 +37,7 @@ config.set_main_option(
     db_config.construct_sqlalchemy_url(),
 )
 
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
