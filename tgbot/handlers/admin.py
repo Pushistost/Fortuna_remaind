@@ -12,8 +12,7 @@ from tgbot.keyboards.reply import start_menu
 from tgbot.middlewares.states import AddEntry
 import tgbot.keyboards.inline as kb
 
-
-import requests as rq
+from infrastructure.sqlite import requests as rq
 
 admin_router = Router()
 admin_router.message.filter(AdminFilter())
@@ -34,7 +33,6 @@ async def start_add_remind(message: Message, state: FSMContext):
 
 @admin_router.message(AddEntry, F.text.as_("remind"))
 async def check_remind(message: Message, state: FSMContext, remind: str):
-
     preparing_to_add = re.split(r"[ |\n]", remind, maxsplit=1)
 
     if len(preparing_to_add) == 2 and preparing_to_add[0].isdigit():
@@ -58,12 +56,33 @@ async def view_remind(message: Message, state: FSMContext):
     await message.answer("Достаем из БД записи с пагинацией по 5 шт", reply_markup=await kb.categories())
 
 
-@admin_router.callback_query(F.data.startswitch("category_"))
-async def category(callback: CallbackQuery):
-    await callback.answer("Вы выбрали категорию")
-    await callback.message.answer("Выберите товар по категории",
-                                  reply_markup=await kb.items(callback.data.split("_")[1]))
+# @admin_router.callback_query(F.data.as_("calldata"))
+# async def some_callback(callback: CallbackQuery, calldata):
+#     await callback.answer(f"{calldata}")
 
+
+@admin_router.callback_query(F.data.startswith("category_"))
+async def category(callback: CallbackQuery):
+
+    await callback.answer("Вы выбрали категорию")
+
+    await callback.message.edit_text("Выберите товар по категории",
+                                     reply_markup=await kb.items(callback.data.split("_")[1]))
+
+
+@admin_router.callback_query(F.data.startswith("item_"))
+async def category(callback: CallbackQuery):
+
+    item_data = await rq.get_item(callback.data.split("_")[1])
+
+    await callback.answer("Вы выбрали товар")
+    await callback.message.edit_text(f"Название: {item_data.name}"
+                                     f"\nОписание: {item_data.description}"
+                                     f"\nЦена: {item_data.price}$",
+                                     reply_markup=None)
+
+
+# reply_markup=await kb.items(callback.data.split("_")[1])
 
 # Part of Delete DATA
 @admin_router.message(F.text == "Удалить запись")

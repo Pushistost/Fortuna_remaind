@@ -7,9 +7,9 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
-from models import make_base
+from infrastructure.database.models import make_base
 from tgbot.config import load_config, Config
-from tgbot.handlers import routers_list, admin_router
+from tgbot.handlers import routers_list
 from tgbot.middlewares.config import ConfigMiddleware
 from tgbot.services import broadcaster
 

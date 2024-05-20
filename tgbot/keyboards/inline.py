@@ -1,8 +1,7 @@
-from aiogram.filters.callback_data import CallbackData
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from requests import get_categories, get_category_item
+from infrastructure.sqlite.requests import get_categories, get_category_item
 
 
 async def yes_or_no_keyboard():
