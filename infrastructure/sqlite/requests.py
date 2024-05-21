@@ -43,6 +43,13 @@ async def check_remind_sql(bot: Bot):
         if ready_remind:
             await send_reminders(bot, ready_remind)
 
+
+async def get_one_remind(id_remind):
+    async with async_session() as session:  # type: AsyncSession
+        result = await session.scalar(select(Reminders).where(Reminders.id == id_remind))
+        return result
+
+
 # async def set_user(tg_id: int) -> None:
 #     async with async_session() as session:
 #         user = await session.scalar(select(User).where(User.tg_id == tg_id))

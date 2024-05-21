@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from infrastructure.sqlite.requests import get_reminders, check_remind_sql
+from infrastructure.sqlite.requests import get_reminders, check_remind_sql, get_one_remind
 
 
 # from infrastructure.sqlite.requests import get_categories, get_category_item
@@ -40,7 +40,7 @@ async def reminders():
 
 
 async def ready_reminders():
-    all_reminders = await check_remind_sql()
+    all_reminders = await get_reminders()
 
     if all_reminders:
 
@@ -55,7 +55,28 @@ async def ready_reminders():
         return keyboard.adjust(1).as_markup()
 
     return None
-#
+
+
+async def remind_menu(remind_id):
+    remind = await get_one_remind(remind_id)
+
+    keyboard = InlineKeyboardBuilder()
+
+    keyboard.add(InlineKeyboardButton(text=f"ID: {remind.id} | DATA: {remind.time.strftime('%b-%d %H:%M')}"
+                                      f" | TEXT: {remind.text}", callback_data=f"remind_{remind.id}"))
+    keyboard.button(
+        text="❌ Удалить запись",
+        callback_data="delete"
+    )
+    keyboard.button(
+        text="⬅️ Отмена",
+        callback_data="back_to_remind"
+    )
+
+    keyboard.adjust(1, 2)
+
+    return keyboard.as_markup()
+
 #
 # async def items(category_item):
 #     all_items = await get_category_item(category_item)

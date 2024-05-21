@@ -64,9 +64,13 @@ async def view_remind(message: Message, state: FSMContext):
     await message.answer("Список всех напоминаний:", reply_markup=await kb.reminders())
 
 
+@admin_router.callback_query(F.data.startswith("remind_"))
+async def show_one_remind(query: CallbackQuery):
+    await query.message.edit_text("Просмотр записи",
+                                  reply_markup=await kb.remind_menu(query.data.split("_")[1]))
 
 
-@admin_router.message(F.text == "Удалить запись")
+@admin_router.callback_query(F.data == "delete")
 async def view_remind(message: Message, state: FSMContext):
     pass
 
@@ -86,8 +90,8 @@ async def back_to_start(query: CallbackQuery, state: FSMContext):
 # async def category(callback: CallbackQuery):
 #     await callback.answer("Вы выбрали категорию")
 #
-#     await callback.message.edit_text("Выберите товар по категории",
-#                                      reply_markup=await kb.items(callback.data.split("_")[1]))
+# await callback.message.edit_text("Выберите товар по категории",
+#                                  reply_markup=await kb.items(callback.data.split("_")[1]))
 #
 #
 # @admin_router.callback_query(F.data.startswith("item_"))
