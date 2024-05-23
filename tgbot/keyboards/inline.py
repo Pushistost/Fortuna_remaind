@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from infrastructure.sqlite.requests import get_reminders, check_remind_sql, get_one_remind
+from tgbot.filters.callback_datas import BackFromText
 
 
 # from infrastructure.sqlite.requests import get_categories, get_category_item
@@ -50,7 +51,7 @@ async def ready_reminders():
             keyboard.add(InlineKeyboardButton(text=f"ID: {remind.id} | DATA: {remind.time.strftime('%b-%d %H:%M')}"
                                                    f" | TEXT: {remind.text}", callback_data=f"remind_{remind.id}"))
 
-        keyboard.add(InlineKeyboardButton(text="На обратно", callback_data="back_to_menu"))
+        keyboard.add(InlineKeyboardButton(text="В начало", callback_data="back_to_menu"))
 
         return keyboard.adjust(1).as_markup()
 
@@ -69,13 +70,27 @@ async def remind_menu(remind_id):
         callback_data="delete"
     )
     keyboard.button(
-        text="⬅️ Отмена",
-        callback_data="back_to_remind"
+        text="⬅️ Назад",
+        callback_data="back_to_reminders"
     )
 
     keyboard.adjust(1, 2)
 
     return keyboard.as_markup()
+
+
+def beck_from_text_bottom(r_id):
+
+    keyboard = InlineKeyboardBuilder()
+
+    keyboard.button(
+        text="⬅️ Назад", callback_data=BackFromText(remind_id=r_id)
+    )
+
+    return keyboard.as_markup()
+
+
+
 
 #
 # async def items(category_item):

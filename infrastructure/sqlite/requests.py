@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from aiogram import Bot
-from sqlalchemy import select, ScalarResult
+from sqlalchemy import select, ScalarResult, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from infrastructure.sqlite.models import async_session, Reminders
@@ -48,6 +48,12 @@ async def get_one_remind(id_remind):
     async with async_session() as session:  # type: AsyncSession
         result = await session.scalar(select(Reminders).where(Reminders.id == id_remind))
         return result
+
+
+async def delete_remind(id_remind):
+    async with async_session() as session:
+        await session.execute(delete(Reminders).where(Reminders.id == id_remind))
+        await session.commit()
 
 
 # async def set_user(tg_id: int) -> None:

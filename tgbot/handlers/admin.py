@@ -8,10 +8,11 @@ from aiogram.types import Message, BotCommandScopeChat, BotCommandScopeAllPrivat
     BotCommandScopeAllChatAdministrators, BotCommandScopeAllGroupChats, BotCommandScopeDefault, CallbackQuery
 from aiogram import F
 
-from infrastructure.sqlite.requests import set_remind, check_remind_sql
+from infrastructure.sqlite.models import Reminders
 from tgbot.filters.admin import AdminFilter
+from tgbot.filters.callback_datas import BackFromText
 from tgbot.keyboards.reply import start_menu
-from tgbot.middlewares.states import AddEntry
+from tgbot.middlewares.states import AddEntry, WorkWithRemind
 import tgbot.keyboards.inline as kb
 
 from infrastructure.sqlite import requests as rq
@@ -54,7 +55,7 @@ async def add_remind(query: CallbackQuery, state: FSMContext):
     text = data.get("text")
     remind_time = datetime.now() + timedelta(hours=hours_to_add)
     await query.message.edit_text(f"Ваша дата: {remind_time.strftime('%Y-%b-%d %H:%M')} \nСообщение {text}", )
-    await set_remind(remind_time, text)
+    await rq.set_remind(remind_time, text)
     await state.clear()
 
 
@@ -62,22 +63,48 @@ async def add_remind(query: CallbackQuery, state: FSMContext):
 @admin_router.message(F.text == "Показать записи")
 async def view_remind(message: Message, state: FSMContext):
     await message.answer("Список всех напоминаний:", reply_markup=await kb.reminders())
+    await state.set_state(WorkWithRemind.Get)
 
 
-@admin_router.callback_query(F.data.startswith("remind_"))
-async def show_one_remind(query: CallbackQuery):
+@admin_router.callback_query(WorkWithRemind.Get, F.data.startswith("remind_"))
+async def show_one_remind(query: CallbackQuery, state: FSMContext):
+    remind_id = query.data.split("_")[1]
     await query.message.edit_text("Просмотр записи",
-                                  reply_markup=await kb.remind_menu(query.data.split("_")[1]))
+                                  reply_markup=await kb.remind_menu(remind_id=remind_id))
+    # await state.update_data(remind_id=remind_id)
+    await state.set_state(WorkWithRemind.View)
+    await state.update_data(rem_id=remind_id)
 
 
-@admin_router.callback_query(F.data == "delete")
-async def view_remind(message: Message, state: FSMContext):
-    pass
+@admin_router.callback_query(WorkWithRemind.View, F.data.startswith("remind_"))
+async def show_text_remind(query: CallbackQuery):
+    remind: Reminders = await rq.get_one_remind(query.data.split('_')[1])
+    await query.message.edit_text(f"Текст напоминания: \n\n{remind.text}",
+                                  reply_markup=kb.beck_from_text_bottom(r_id=remind.id))
 
 
-# @admin_router.message(F.text)
-# async def get_id(message: Message):
-#     await message.answer(f"{message.chat.id}")
+@admin_router.callback_query(WorkWithRemind.View, BackFromText.filter())
+async def back_from_text(query: CallbackQuery, callback_data: BackFromText, state: FSMContext):
+    id = callback_data.remind_id
+    await query.message.edit_text("Просмотр записи",
+                                  reply_markup=await kb.remind_menu(remind_id=id))
+    await state.set_state(WorkWithRemind.View)
+
+
+@admin_router.callback_query(F.data == "delete", WorkWithRemind.View)
+async def delete_remind_handler(query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    rem_id = data.get("rem_id")
+    await rq.delete_remind(rem_id)
+    await query.message.edit_text("Напоминание удалено\nОбновленный список напоминаний:",
+                                  reply_markup=await kb.reminders())
+    await state.set_state(WorkWithRemind.Get)
+
+
+@admin_router.callback_query(F.data == "back_to_reminders")
+async def beck_to_list_of_remind(query: CallbackQuery, state: FSMContext):
+    await query.message.edit_text("Список всех напоминаний:", reply_markup=await kb.reminders())
+    await state.set_state(WorkWithRemind.Get)
 
 
 @admin_router.callback_query(F.data == "back_to_menu")
