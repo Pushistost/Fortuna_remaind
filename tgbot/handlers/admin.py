@@ -10,6 +10,7 @@ from aiogram import F
 from infrastructure.sqlite.models import Reminders
 from tgbot.filters.admin import AdminFilter
 from tgbot.filters.callback_datas import BackFromText
+from tgbot.keyboards.inline import jast_go_to_start
 from tgbot.keyboards.reply import start_menu
 from tgbot.middlewares.states import AddEntry, WorkWithRemind
 import tgbot.keyboards.inline as kb
@@ -40,7 +41,8 @@ async def start_add_remind(message: Message, state: FSMContext) -> None:
         message: Объект входящего сообщения.
         state: Контекст конечного автомата.
     """
-    await message.answer("Введите число (часы), а с новой строки (Shift+Enter) информацию которую хотите добавить")
+    await message.answer("Введите число (часы), а с новой строки (Shift+Enter) информацию которую хотите добавить",
+                         reply_markup=jast_go_to_start())
     await state.set_state(AddEntry)
 
 
@@ -59,10 +61,10 @@ async def check_remind(message: Message, state: FSMContext, remind: str) -> None
     if len(preparing_to_add) == 2 and preparing_to_add[0].isdigit():
         await state.update_data(time=int(preparing_to_add[0]))
         await state.update_data(text=preparing_to_add[1])
-        await message.answer(f"*Время таймера*: {preparing_to_add[0]}ч\n*Текст*: {preparing_to_add[1]}",
+        await message.answer(f"*Таймер*: {preparing_to_add[0]}ч\n*Текст*: {preparing_to_add[1]}",
                              reply_markup=await kb.yes_or_no_keyboard(), parse_mode=ParseMode.MARKDOWN_V2)
     else:
-        await message.answer("*Неверный ввод данных, попробуйте еще*", parse_mode=ParseMode.MARKDOWN_V2)
+        await message.answer("Неверный ввод данных, попробуйте еще", parse_mode=ParseMode.MARKDOWN_V2)
         await start_add_remind(message, state)
 
 
@@ -79,7 +81,7 @@ async def add_remind(query: CallbackQuery, state: FSMContext) -> None:
     hours_to_add = data.get("time")
     text = data.get("text")
     remind_time = datetime.now() + timedelta(hours=hours_to_add)
-    await query.message.edit_text(f"*Ваша дата*: {remind_time.strftime('%Y-%b-%d %H:%M')}"
+    await query.message.edit_text(f"*Ваша дата*: {remind_time.strftime('%Y %b %d %H:%M')}"
                                   f"\n*Сообщение*: {text}", parse_mode=ParseMode.MARKDOWN_V2)
     await rq.set_remind(remind_time, text)
     await state.clear()
@@ -94,7 +96,7 @@ async def view_remind(message: Message, state: FSMContext) -> None:
         message: Объект входящего сообщения.
         state: Контекст конечного автомата.
     """
-    await message.answer("*Список всех напоминаний*:", reply_markup=await kb.reminders(),
+    await message.answer("Список всех напоминаний:", reply_markup=await kb.reminders(),
                          parse_mode=ParseMode.MARKDOWN_V2)
     await state.set_state(WorkWithRemind.Get)
 
@@ -109,7 +111,7 @@ async def show_one_remind(query: CallbackQuery, state: FSMContext) -> None:
         state: Контекст конечного автомата.
     """
     remind_id = int(query.data.split("_")[1])
-    await query.message.edit_text("*Просмотр записи*",
+    await query.message.edit_text("Просмотр записи",
                                   reply_markup=await kb.remind_menu(remind_id=remind_id),
                                   parse_mode=ParseMode.MARKDOWN_V2)
     await state.set_state(WorkWithRemind.View)
@@ -141,7 +143,7 @@ async def back_from_text(query: CallbackQuery, callback_data: BackFromText, stat
         state: Контекст конечного автомата.
     """
     rem_id = callback_data.remind_id
-    await query.message.edit_text("*Просмотр записи*",
+    await query.message.edit_text("Просмотр записи",
                                   reply_markup=await kb.remind_menu(remind_id=rem_id), parse_mode=ParseMode.MARKDOWN_V2)
     await state.set_state(WorkWithRemind.View)
 
@@ -172,7 +174,7 @@ async def beck_to_list_of_remind(query: CallbackQuery, state: FSMContext) -> Non
         query: Объект входящего callback-запроса.
         state: Контекст конечного автомата.
     """
-    await query.message.edit_text("*Список всех напоминаний*:", reply_markup=await kb.reminders(),
+    await query.message.edit_text("Список всех напоминаний:", reply_markup=await kb.reminders(),
                                   parse_mode=ParseMode.MARKDOWN_V2)
     await state.set_state(WorkWithRemind.Get)
 
@@ -186,7 +188,7 @@ async def back_to_start(query: CallbackQuery, state: FSMContext) -> None:
         query: Объект входящего callback-запроса.
         state: Контекст конечного автомата.
     """
-    await query.message.edit_text("*Продолжаем работу*", reply_markup=None, parse_mode=ParseMode.MARKDOWN_V2)
+    await query.message.edit_text("Продолжаем работу", reply_markup=None, parse_mode=ParseMode.MARKDOWN_V2)
     await state.clear()
 
 

@@ -15,12 +15,12 @@ async def yes_or_no_keyboard() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardBuilder()
 
     keyboard.button(
-        text="📝 добавить запись",
+        text="📝 Добавить запись",
         callback_data="add_note"
     )
     keyboard.button(
-        text="📋 отмена",
-        callback_data="abolition"
+        text="❌ Отмена",
+        callback_data="back_to_menu"
     )
 
     keyboard.adjust(2)
@@ -41,7 +41,7 @@ async def reminders() -> InlineKeyboardMarkup:
 
     for remind in all_reminders:
         keyboard.add(InlineKeyboardButton(
-            text=f"ID: {remind.id} | DATA: {remind.time.strftime('%b-%d %H:%M')} | TEXT: {remind.text}",
+            text=f"ID: {remind.id} | DATA: {remind.time.strftime('%b %d %H:%M')} | TEXT: {remind.text}",
             callback_data=f"remind_{remind.id}"))
 
     keyboard.add(InlineKeyboardButton(text="На обратно", callback_data="back_to_menu"))
@@ -88,7 +88,7 @@ async def remind_menu(remind_id: int) -> InlineKeyboardMarkup:
 
     keyboard = InlineKeyboardBuilder()
     keyboard.add(InlineKeyboardButton(
-        text=f"ID: {remind.id} | DATA: {remind.time.strftime('%b-%d %H:%M')} | TEXT: {remind.text}",
+        text=f"ID: {remind.id} | DATA: {remind.time.strftime('%b %d %H:%M')} | TEXT: {remind.text}",
         callback_data=f"remind_{remind.id}"))
     keyboard.button(
         text="❌ Удалить запись",
@@ -118,6 +118,22 @@ def beck_from_text_bottom(r_id: int) -> InlineKeyboardMarkup:
 
     keyboard.button(
         text="⬅️ Назад", callback_data=BackFromText(remind_id=r_id)
+    )
+
+    return keyboard.as_markup()
+
+
+def jast_go_to_start() -> InlineKeyboardMarkup:
+    """
+    Создает клавиатуру с кнопкой для возврата стартовому меню из создания напоминания
+
+    Returns:
+        InlineKeyboardMarkup: Клавиатура с кнопкой "назад".
+    """
+    keyboard = InlineKeyboardBuilder()
+
+    keyboard.button(
+        text="⬅️ Назад", callback_data="back_to_menu"
     )
 
     return keyboard.as_markup()
