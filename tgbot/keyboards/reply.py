@@ -7,7 +7,6 @@ start_menu = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text="Показать записи"),
-            KeyboardButton(text="Удалить запись")
         ]
     ],
     resize_keyboard=True
