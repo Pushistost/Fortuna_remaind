@@ -1,6 +1,7 @@
 import re
 from datetime import datetime, timedelta
 from aiogram import Router
+from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, BotCommandScopeChat, BotCommandScopeAllPrivateChats, \
@@ -58,10 +59,10 @@ async def check_remind(message: Message, state: FSMContext, remind: str) -> None
     if len(preparing_to_add) == 2 and preparing_to_add[0].isdigit():
         await state.update_data(time=int(preparing_to_add[0]))
         await state.update_data(text=preparing_to_add[1])
-        await message.answer(f"part 1: {preparing_to_add[0]}, \npart 2: {preparing_to_add[1]}",
-                             reply_markup=await kb.yes_or_no_keyboard())
+        await message.answer(f"*Время таймера*: {preparing_to_add[0]}ч\n*Текст*: {preparing_to_add[1]}",
+                             reply_markup=await kb.yes_or_no_keyboard(), parse_mode=ParseMode.MARKDOWN_V2)
     else:
-        await message.answer("Неверный ввод данных, попробуйте еще")
+        await message.answer("*Неверный ввод данных, попробуйте еще*", parse_mode=ParseMode.MARKDOWN_V2)
         await start_add_remind(message, state)
 
 
@@ -78,7 +79,8 @@ async def add_remind(query: CallbackQuery, state: FSMContext) -> None:
     hours_to_add = data.get("time")
     text = data.get("text")
     remind_time = datetime.now() + timedelta(hours=hours_to_add)
-    await query.message.edit_text(f"Ваша дата: {remind_time.strftime('%Y-%b-%d %H:%M')} \nСообщение {text}", )
+    await query.message.edit_text(f"*Ваша дата*: {remind_time.strftime('%Y-%b-%d %H:%M')}"
+                                  f"\n*Сообщение*: {text}", parse_mode=ParseMode.MARKDOWN_V2)
     await rq.set_remind(remind_time, text)
     await state.clear()
 
@@ -92,7 +94,8 @@ async def view_remind(message: Message, state: FSMContext) -> None:
         message: Объект входящего сообщения.
         state: Контекст конечного автомата.
     """
-    await message.answer("Список всех напоминаний:", reply_markup=await kb.reminders())
+    await message.answer("*Список всех напоминаний*:", reply_markup=await kb.reminders(),
+                         parse_mode=ParseMode.MARKDOWN_V2)
     await state.set_state(WorkWithRemind.Get)
 
 
@@ -105,9 +108,10 @@ async def show_one_remind(query: CallbackQuery, state: FSMContext) -> None:
         query: Объект входящего callback-запроса.
         state: Контекст конечного автомата.
     """
-    remind_id = query.data.split("_")[1]
-    await query.message.edit_text("Просмотр записи",
-                                  reply_markup=await kb.remind_menu(remind_id=remind_id))
+    remind_id = int(query.data.split("_")[1])
+    await query.message.edit_text("*Просмотр записи*",
+                                  reply_markup=await kb.remind_menu(remind_id=remind_id),
+                                  parse_mode=ParseMode.MARKDOWN_V2)
     await state.set_state(WorkWithRemind.View)
     await state.update_data(rem_id=remind_id)
 
@@ -120,9 +124,10 @@ async def show_text_remind(query: CallbackQuery) -> None:
     Args:
         query: Объект входящего callback-запроса.
     """
-    remind: Reminders = await rq.get_one_remind(query.data.split('_')[1])
-    await query.message.edit_text(f"Текст напоминания: \n\n{remind.text}",
-                                  reply_markup=kb.beck_from_text_bottom(r_id=remind.id))
+    remind: Reminders = await rq.get_one_remind(int(query.data.split('_')[1]))
+    await query.message.edit_text(f"*Текст напоминания*: \n\n{remind.text}",
+                                  reply_markup=kb.beck_from_text_bottom(r_id=remind.id),
+                                  parse_mode=ParseMode.MARKDOWN_V2)
 
 
 @admin_router.callback_query(WorkWithRemind.View, BackFromText.filter())
@@ -136,8 +141,8 @@ async def back_from_text(query: CallbackQuery, callback_data: BackFromText, stat
         state: Контекст конечного автомата.
     """
     rem_id = callback_data.remind_id
-    await query.message.edit_text("Просмотр записи",
-                                  reply_markup=await kb.remind_menu(remind_id=rem_id))
+    await query.message.edit_text("*Просмотр записи*",
+                                  reply_markup=await kb.remind_menu(remind_id=rem_id), parse_mode=ParseMode.MARKDOWN_V2)
     await state.set_state(WorkWithRemind.View)
 
 
@@ -153,8 +158,8 @@ async def delete_remind_handler(query: CallbackQuery, state: FSMContext) -> None
     data = await state.get_data()
     rem_id = data.get("rem_id")
     await rq.delete_remind(rem_id)
-    await query.message.edit_text("Напоминание удалено\nОбновленный список напоминаний:",
-                                  reply_markup=await kb.reminders())
+    await query.message.edit_text("*Напоминание удалено*\nОбновленный список напоминаний:",
+                                  reply_markup=await kb.reminders(), parse_mode=ParseMode.MARKDOWN_V2)
     await state.set_state(WorkWithRemind.Get)
 
 
@@ -167,7 +172,8 @@ async def beck_to_list_of_remind(query: CallbackQuery, state: FSMContext) -> Non
         query: Объект входящего callback-запроса.
         state: Контекст конечного автомата.
     """
-    await query.message.edit_text("Список всех напоминаний:", reply_markup=await kb.reminders())
+    await query.message.edit_text("*Список всех напоминаний*:", reply_markup=await kb.reminders(),
+                                  parse_mode=ParseMode.MARKDOWN_V2)
     await state.set_state(WorkWithRemind.Get)
 
 
@@ -180,7 +186,7 @@ async def back_to_start(query: CallbackQuery, state: FSMContext) -> None:
         query: Объект входящего callback-запроса.
         state: Контекст конечного автомата.
     """
-    await query.message.edit_text("Продолжаем работу", reply_markup=None)
+    await query.message.edit_text("*Продолжаем работу*", reply_markup=None, parse_mode=ParseMode.MARKDOWN_V2)
     await state.clear()
 
 
