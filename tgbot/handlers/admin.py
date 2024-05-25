@@ -2,6 +2,7 @@ import re
 from datetime import datetime, timedelta
 from aiogram import Router
 from aiogram.enums import ParseMode
+from aiogram.utils.markdown import markdown_decoration
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, BotCommandScopeChat, BotCommandScopeAllPrivateChats, \
@@ -10,7 +11,6 @@ from aiogram import F
 from infrastructure.sqlite.models import Reminders
 from tgbot.filters.admin import AdminFilter
 from tgbot.filters.callback_datas import BackFromText
-from tgbot.keyboards.inline import jast_go_to_start
 from tgbot.keyboards.reply import start_menu
 from tgbot.middlewares.states import AddEntry, WorkWithRemind
 import tgbot.keyboards.inline as kb
@@ -42,7 +42,7 @@ async def start_add_remind(message: Message, state: FSMContext) -> None:
         state: Контекст конечного автомата.
     """
     await message.answer("Введите число (часы), а с новой строки (Shift+Enter) информацию которую хотите добавить",
-                         reply_markup=jast_go_to_start())
+                         reply_markup=kb.jast_go_to_start())
     await state.set_state(AddEntry)
 
 
@@ -61,7 +61,8 @@ async def check_remind(message: Message, state: FSMContext, remind: str) -> None
     if len(preparing_to_add) == 2 and preparing_to_add[0].isdigit():
         await state.update_data(time=int(preparing_to_add[0]))
         await state.update_data(text=preparing_to_add[1])
-        await message.answer(f"*Таймер*: {preparing_to_add[0]}ч\n*Текст*: {preparing_to_add[1]}",
+        await message.answer(f"Таймер: {preparing_to_add[0]}ч\n"
+                             f"Текст: {markdown_decoration.quote(preparing_to_add[1])}",
                              reply_markup=await kb.yes_or_no_keyboard(), parse_mode=ParseMode.MARKDOWN_V2)
     else:
         await message.answer("Неверный ввод данных, попробуйте еще", parse_mode=ParseMode.MARKDOWN_V2)
@@ -82,7 +83,7 @@ async def add_remind(query: CallbackQuery, state: FSMContext) -> None:
     text = data.get("text")
     remind_time = datetime.now() + timedelta(hours=hours_to_add)
     await query.message.edit_text(f"*Ваша дата*: {remind_time.strftime('%Y %b %d %H:%M')}"
-                                  f"\n*Сообщение*: {text}", parse_mode=ParseMode.MARKDOWN_V2)
+                                  f"\n*Сообщение*: {markdown_decoration.quote(text)}", parse_mode=ParseMode.MARKDOWN_V2)
     await rq.set_remind(remind_time, text)
     await state.clear()
 

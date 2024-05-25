@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, String, ForeignKey, DateTime
+from sqlalchemy import String, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, async_sessionmaker
 
