@@ -35,7 +35,7 @@ async def send_reminders(bot: Bot, ready_remind_list):
             # Отправка напоминания
             await bot.send_message(
                 chat_id=-1002032136082,
-                text=f"*Свежее напоминание*:\n\n{markdown_decoration.quote(remind.text)}",
+                text=f"*Прошло {remind.hours}ч*:\n\n{markdown_decoration.quote(remind.text)}",
                 parse_mode=ParseMode.MARKDOWN_V2
             )
             # Удаление напоминания после успешной отправки

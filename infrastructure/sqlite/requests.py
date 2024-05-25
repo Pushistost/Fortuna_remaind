@@ -18,14 +18,15 @@ async def get_reminders() -> ScalarResult[Reminders]:
         return result
 
 
-async def set_remind(data: datetime, text: str) -> None:
+async def set_remind(data: datetime, text: str, hours: int) -> None:
     """
     Устанавливает новое напоминание в базе данных.
     :param data: Дата и время напоминания.
     :param text: Текст напоминания.
+    :param hours: Сколько часов в таймере
     """
     async with async_session() as session:  # type: AsyncSession
-        session.add(Reminders(time=data, text=text))
+        session.add(Reminders(time=data, text=text, hours=hours))
         await session.commit()
 
 

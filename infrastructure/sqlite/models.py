@@ -1,4 +1,4 @@
-from sqlalchemy import String, DateTime
+from sqlalchemy import DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, async_sessionmaker
 
@@ -17,6 +17,7 @@ class Reminders(Base, TableNameMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     time = mapped_column(DateTime)
+    hours: Mapped[int] = mapped_column()
     text: Mapped[str] = mapped_column()
 
 

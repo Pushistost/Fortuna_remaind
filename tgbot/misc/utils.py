@@ -24,4 +24,4 @@ async def add_remind(time, remind, message: Message) -> None:
     remind_time = datetime.now() + timedelta(hours=hours_to_add)
     await message.answer(f"*Запись добавлена*\n\n*Время напоминания*: {remind_time.strftime('%Y %b %d %H:%M')}"
                          f"\n*Сообщение*: {markdown_decoration.quote(text)}", parse_mode=ParseMode.MARKDOWN_V2)
-    await set_remind(remind_time, text)
+    await set_remind(data=remind_time, text=text, hours=time)
