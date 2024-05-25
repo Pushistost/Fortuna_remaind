@@ -40,3 +40,6 @@ async def send_reminders(bot: Bot, ready_remind_list):
             )
             # Удаление напоминания после успешной отправки
             await clean_remind_list(remind)
+
+
+

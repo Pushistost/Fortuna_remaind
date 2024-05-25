@@ -17,7 +17,7 @@ class Reminders(Base, TableNameMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     time = mapped_column(DateTime)
-    text: Mapped[str] = mapped_column(String(500))
+    text: Mapped[str] = mapped_column()
 
 
 async def make_base():

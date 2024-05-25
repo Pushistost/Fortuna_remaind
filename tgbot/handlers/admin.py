@@ -12,10 +12,10 @@ from infrastructure.sqlite.models import Reminders
 from tgbot.filters.admin import AdminFilter
 from tgbot.filters.callback_datas import BackFromText
 from tgbot.keyboards.reply import start_menu
-from tgbot.middlewares.states import AddEntry, WorkWithRemind
+from tgbot.middlewares.states import WorkWithRemind
 import tgbot.keyboards.inline as kb
 from infrastructure.sqlite import requests as rq
-
+from tgbot.misc.utils import add_remind
 
 admin_router = Router()
 admin_router.message.filter(AdminFilter())
@@ -29,63 +29,31 @@ async def admin_start(message: Message) -> None:
     Args:
         message: Объект входящего сообщения.
     """
-    await message.answer("Ну здравствуй, Отец", reply_markup=start_menu)
+    await message.answer("Короче правила простые, но на всякий случай повторю:\n"
+                         "Тупо пишешь цифру - это будут часы, потом пробел или Shift+Enter"
+                         "Далее пишешь текст напоминания", reply_markup=start_menu)
 
 
-@admin_router.message(F.text == "Добавить напоминание")
-async def start_add_remind(message: Message, state: FSMContext) -> None:
+@admin_router.message(F.text != "Показать записи", F.text.as_("remind"))
+async def check_remind(message: Message, remind: str) -> None:
     """
-    Инициирует процесс добавления напоминания.
+    Проверяет и обрабатывает напоминание, переданное в сообщении.
 
     Args:
-        message: Объект входящего сообщения.
-        state: Контекст конечного автомата.
-    """
-    await message.answer("Введите число (часы), а с новой строки (Shift+Enter) информацию которую хотите добавить",
-                         reply_markup=kb.jast_go_to_start())
-    await state.set_state(AddEntry)
+        message (Message): Объект сообщения.
+        remind (str): Текст напоминания.
 
-
-@admin_router.message(AddEntry, F.text.as_("remind"))
-async def check_remind(message: Message, state: FSMContext, remind: str) -> None:
-    """
-    Проверяет и обрабатывает введенные данные для напоминания.
-
-    Args:
-        message: Объект входящего сообщения.
-        state: Контекст конечного автомата.
-        remind: Текст напоминания.
+    Returns:
+        None
     """
     preparing_to_add = re.split(r"[ |\n]", remind, maxsplit=1)
 
     if len(preparing_to_add) == 2 and preparing_to_add[0].isdigit():
-        await state.update_data(time=int(preparing_to_add[0]))
-        await state.update_data(text=preparing_to_add[1])
-        await message.answer(f"Таймер: {preparing_to_add[0]}ч\n"
-                             f"Текст: {markdown_decoration.quote(preparing_to_add[1])}",
-                             reply_markup=await kb.yes_or_no_keyboard(), parse_mode=ParseMode.MARKDOWN_V2)
+        time = int(preparing_to_add[0])
+        text = preparing_to_add[1]
+        await add_remind(time=time, remind=text, message=message)
     else:
-        await message.answer("Неверный ввод данных, попробуйте еще", parse_mode=ParseMode.MARKDOWN_V2)
-        await start_add_remind(message, state)
-
-
-@admin_router.callback_query(AddEntry, F.data == "add_note")
-async def add_remind(query: CallbackQuery, state: FSMContext) -> None:
-    """
-    Добавляет напоминание в базу данных.
-
-    Args:
-        query: Объект входящего callback-запроса.
-        state: Контекст конечного автомата.
-    """
-    data = await state.get_data()
-    hours_to_add = data.get("time")
-    text = data.get("text")
-    remind_time = datetime.now() + timedelta(hours=hours_to_add)
-    await query.message.edit_text(f"*Ваша дата*: {remind_time.strftime('%Y %b %d %H:%M')}"
-                                  f"\n*Сообщение*: {markdown_decoration.quote(text)}", parse_mode=ParseMode.MARKDOWN_V2)
-    await rq.set_remind(remind_time, text)
-    await state.clear()
+        await message.answer("Не верный формат записи", parse_mode=ParseMode.MARKDOWN_V2)
 
 
 @admin_router.message(F.text == "Показать записи")
