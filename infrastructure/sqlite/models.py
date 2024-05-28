@@ -1,4 +1,4 @@
-from sqlalchemy import DateTime
+from sqlalchemy import DateTime, BigInteger, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, async_sessionmaker
 
@@ -13,12 +13,19 @@ class Base(AsyncAttrs, DeclarativeBase):
     pass
 
 
-class Reminders(Base, TableNameMixin):
+class Remind(Base, TableNameMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    user_id = mapped_column(BigInteger, ForeignKey("Users.tg_id"))
     time = mapped_column(DateTime)
     hours: Mapped[int] = mapped_column()
     text: Mapped[str] = mapped_column()
+
+
+class User(Base, TableNameMixin):
+
+    tg_id = mapped_column(BigInteger, primary_key=True)
+    group_id = mapped_column(BigInteger)
 
 
 async def make_base():
