@@ -4,7 +4,7 @@ from aiogram.enums import ParseMode
 from aiogram.types import Message
 from aiogram.utils.text_decorations import markdown_decoration
 
-from infrastructure.sqlite.requests import set_remind
+from sqlite.requests import set_remind
 
 
 async def add_remind(time, remind, message: Message) -> None:

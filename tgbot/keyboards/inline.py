@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from infrastructure.sqlite.requests import get_reminders, get_one_remind
+from sqlite.requests import get_reminders, get_one_remind
 from tgbot.filters.callback_datas import BackFromText
 
 

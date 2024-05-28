@@ -2,7 +2,7 @@ from sqlalchemy import DateTime, BigInteger, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, async_sessionmaker
 
-from infrastructure.database.models.base import TableNameMixin
+from sqlite.base import TableNameMixin
 
 engine = create_async_engine(url="sqlite+aiosqlite:///infrastructure/sqlite/db.sqlite3")
 

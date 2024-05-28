@@ -2,7 +2,7 @@ from aiogram import Bot
 from aiogram.enums import ParseMode
 from aiogram.utils.text_decorations import markdown_decoration
 
-from infrastructure.sqlite.models import Remind
+from sqlite import Remind
 
 
 async def clean_remind_list(remind: Remind):
@@ -15,7 +15,7 @@ async def clean_remind_list(remind: Remind):
     Returns:
         None
     """
-    from infrastructure.sqlite.requests import delete_remind
+    from sqlite.requests import delete_remind
     await delete_remind(remind.id)
 
 

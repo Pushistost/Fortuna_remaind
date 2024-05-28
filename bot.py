@@ -7,8 +7,8 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
-from infrastructure.sqlite.models import make_base
-from infrastructure.sqlite.requests import check_remind_sql
+from sqlite import make_base
+from sqlite.requests import check_remind_sql
 from tgbot.config import load_config, Config
 from tgbot.handlers import routers_list
 from tgbot.middlewares.config import ConfigMiddleware

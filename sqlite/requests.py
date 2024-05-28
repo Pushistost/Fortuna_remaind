@@ -4,7 +4,7 @@ from aiogram import Bot
 from sqlalchemy import select, ScalarResult, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from infrastructure.sqlite.models import async_session, Remind
+from sqlite.models import async_session, Remind
 from tgbot.misc.work_with_group import send_reminders
 
 

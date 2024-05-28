@@ -5,12 +5,11 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from aiogram import F
-from infrastructure.sqlite.models import Remind
+from sqlite import Remind, requests as rq
 from tgbot.filters.callback_datas import BackFromText
 from tgbot.keyboards.reply import start_menu
 from tgbot.misc.states import WorkWithRemind
 import tgbot.keyboards.inline as kb
-from infrastructure.sqlite import requests as rq
 from tgbot.misc.utils import add_remind
 
 user_router = Router()
