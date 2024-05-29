@@ -1,32 +1,36 @@
 from aiogram import Bot
 from aiogram.enums import ParseMode
 from aiogram.utils.text_decorations import markdown_decoration
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlite import Remind
 
 
-async def clean_remind_list(remind: Remind):
+async def clean_remind_list(remind: Remind, session: AsyncSession):
     """
     Удаляет напоминание из базы данных.
 
     Args:
         remind (Remind): Напоминание для удаления.
+        session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
+                Должна быть экземпляром `AsyncSession` из SQLAlchemy.
 
     Returns:
         None
     """
     from sqlite.requests import delete_remind
-    await delete_remind(remind.id)
+    await delete_remind(remind.id, session)
 
 
-async def send_reminders(bot: Bot, ready_remind_list):
+async def send_reminders(bot: Bot, ready_remind_list, session: AsyncSession):
     """
     Отправляет напоминания в указанный чат и удаляет их из базы данных.
 
     Args:
         bot (Bot): Экземпляр бота для отправки сообщений.
         ready_remind_list (list): Список напоминаний для отправки.
-
+        session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
+                Должна быть экземпляром `AsyncSession` из SQLAlchemy.
     Returns:
         None
     """
@@ -34,12 +38,12 @@ async def send_reminders(bot: Bot, ready_remind_list):
         for remind in ready_remind_list:
             # Отправка напоминания
             await bot.send_message(
-                chat_id=-4153830058,
+                chat_id=-1002032136082,
                 text=f"*Прошло {remind.hours}ч*:\n\n{markdown_decoration.quote(remind.text)}",
                 parse_mode=ParseMode.MARKDOWN_V2
             )
             # Удаление напоминания после успешной отправки
-            await clean_remind_list(remind)
+            await clean_remind_list(remind, session)
 
 
 

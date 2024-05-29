@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncAttrs, create_async_engine, async_sessio
 
 from sqlite.base import TableNameMixin
 
-engine = create_async_engine(url="sqlite+aiosqlite:///infrastructure/sqlite/db.sqlite3")
+engine = create_async_engine(url="sqlite+aiosqlite:///sqlite/db.sqlite3")
 
 async_session = async_sessionmaker(engine)
 
@@ -16,7 +16,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 class Remind(Base, TableNameMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id = mapped_column(BigInteger, ForeignKey("Users.tg_id"))
+    user_id = mapped_column(BigInteger, ForeignKey("users.tg_id"))
     time = mapped_column(DateTime)
     hours: Mapped[int] = mapped_column()
     text: Mapped[str] = mapped_column()

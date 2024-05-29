@@ -7,11 +7,13 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
-from sqlite import make_base
+
+from sqlite.models import async_session, make_base
 from sqlite.requests import check_remind_sql
 from tgbot.config import load_config, Config
 from tgbot.handlers import routers_list
 from tgbot.middlewares.config import ConfigMiddleware
+from tgbot.middlewares.database import DatabaseMiddleware
 from tgbot.services import broadcaster
 
 
@@ -19,13 +21,14 @@ async def on_startup(bot: Bot, admin_ids: list[int]):
     await broadcaster.broadcast(bot, admin_ids, "Бот був запущений")
 
 
-async def remind_worker(bot: Bot):
+async def remind_worker(bot: Bot, session_pool):
     while True:
-        await check_remind_sql(bot)
+        async with session_pool() as session:
+            await check_remind_sql(bot, session)
         await asyncio.sleep(60)
 
 
-def register_global_middlewares(dp: Dispatcher, config: Config, session_pool=None):
+def register_global_middlewares(dp: Dispatcher, config: Config, session_pool):
     """
     Register global middlewares for the given dispatcher.
     Global middlewares here are the ones that are applied to all the handlers (you specify the type of update)
@@ -38,7 +41,7 @@ def register_global_middlewares(dp: Dispatcher, config: Config, session_pool=Non
     """
     middleware_types = [
         ConfigMiddleware(config),
-        # DatabaseMiddleware(session_pool),
+        DatabaseMiddleware(session_pool),
     ]
     for middleware_type in middleware_types:
         dp.message.outer_middleware(middleware_type)
@@ -105,9 +108,9 @@ async def main():
     dp = Dispatcher(storage=storage)
     dp.include_routers(*routers_list)
 
-    register_global_middlewares(dp, config)
+    register_global_middlewares(dp, config, async_session)
     # await set_all_default_commands(bot)
-    asyncio.ensure_future(remind_worker(bot))
+    asyncio.ensure_future(remind_worker(bot, async_session))
 
     await on_startup(bot, config.tg_bot.admin_ids)
     await dp.start_polling(bot)
