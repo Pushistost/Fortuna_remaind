@@ -43,6 +43,8 @@ async def check_remind_sql(bot: Bot, session: AsyncSession):
     :param bot: Экземпляр класса бот
     """
     ready_remind = await session.scalars(select(Remind).where(Remind.time <= datetime.now()))
+    ready_remind = ready_remind.all()
+
     if ready_remind:
         await send_reminders(bot, ready_remind, session)
 
@@ -74,3 +76,6 @@ async def delete_remind(id_remind: int, session: AsyncSession) -> None:
     """
     await session.execute(delete(Remind).where(Remind.id == id_remind))
     await session.commit()
+
+
+

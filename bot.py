@@ -7,7 +7,6 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
-
 from sqlite.models import async_session, make_base
 from sqlite.requests import check_remind_sql
 from tgbot.config import load_config, Config
@@ -15,6 +14,7 @@ from tgbot.handlers import routers_list
 from tgbot.middlewares.config import ConfigMiddleware
 from tgbot.middlewares.database import DatabaseMiddleware
 from tgbot.services import broadcaster
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 
 async def on_startup(bot: Bot, admin_ids: list[int]):
@@ -22,10 +22,8 @@ async def on_startup(bot: Bot, admin_ids: list[int]):
 
 
 async def remind_worker(bot: Bot, session_pool):
-    while True:
-        async with session_pool() as session:
-            await check_remind_sql(bot, session)
-        await asyncio.sleep(60)
+    async with session_pool() as session:
+        await check_remind_sql(bot, session)
 
 
 def register_global_middlewares(dp: Dispatcher, config: Config, session_pool):
@@ -108,10 +106,13 @@ async def main():
     dp = Dispatcher(storage=storage)
     dp.include_routers(*routers_list)
 
+    scheduler = AsyncIOScheduler()
+
     register_global_middlewares(dp, config, async_session)
     # await set_all_default_commands(bot)
-    asyncio.ensure_future(remind_worker(bot, async_session))
-
+    scheduler.add_job(remind_worker,
+                      "interval", seconds=60, timezone='Europe/Moscow', args=(bot, async_session))
+    scheduler.start()
     await on_startup(bot, config.tg_bot.admin_ids)
     await dp.start_polling(bot)
     await bot.session.close()
@@ -122,4 +123,3 @@ if __name__ == "__main__":
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         logging.error("Бот был выключен!")
-

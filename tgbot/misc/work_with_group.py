@@ -1,28 +1,31 @@
 from aiogram import Bot
 from aiogram.enums import ParseMode
 from aiogram.utils.text_decorations import markdown_decoration
+from sqlalchemy import ScalarResult
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from sqlite import Remind
 
 
-async def clean_remind_list(remind: Remind, session: AsyncSession):
+async def clean_remind_list(remind_list: list, session: AsyncSession):
     """
     Удаляет напоминание из базы данных.
 
     Args:
-        remind (Remind): Напоминание для удаления.
+        remind_list (list): Напоминания для удаления.
         session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
                 Должна быть экземпляром `AsyncSession` из SQLAlchemy.
 
     Returns:
         None
     """
-    from sqlite.requests import delete_remind
-    await delete_remind(remind.id, session)
+    for remind in remind_list:
+        stmt = delete(Remind).where(Remind.id == remind.id)
+        await session.execute(stmt)
+    await session.commit()
 
 
-async def send_reminders(bot: Bot, ready_remind_list, session: AsyncSession):
+async def send_reminders(bot: Bot, ready_remind_list: ScalarResult, session: AsyncSession):
     """
     Отправляет напоминания в указанный чат и удаляет их из базы данных.
 
@@ -34,16 +37,15 @@ async def send_reminders(bot: Bot, ready_remind_list, session: AsyncSession):
     Returns:
         None
     """
-    if ready_remind_list:
-        for remind in ready_remind_list:
-            # Отправка напоминания
-            await bot.send_message(
-                chat_id=-1002032136082,
-                text=f"*Прошло {remind.hours}ч*:\n\n{markdown_decoration.quote(remind.text)}",
-                parse_mode=ParseMode.MARKDOWN_V2
-            )
-            # Удаление напоминания после успешной отправки
-            await clean_remind_list(remind, session)
 
+    print(f"Reminders is {type(ready_remind_list)}")
 
+    for remind in ready_remind_list:
+        # Отправка напоминания
+        await bot.send_message(
+            chat_id=-1002032136082,
+            text=f"*Прошло {remind.hours}ч*:\n\n{markdown_decoration.quote(remind.text)}",
+            parse_mode=ParseMode.MARKDOWN_V2
+        )
 
+    await clean_remind_list(ready_remind_list, session)

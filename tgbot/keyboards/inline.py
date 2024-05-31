@@ -52,31 +52,31 @@ async def reminders(session: AsyncSession) -> InlineKeyboardMarkup:
     return keyboard.adjust(1).as_markup()
 
 
-async def ready_reminders() -> InlineKeyboardMarkup or None:
-    """
-    Создает клавиатуру со списком всех готовых напоминаний, если таковые имеются.
-
-    Returns:
-        InlineKeyboardMarkup: Клавиатура со списком напоминаний и кнопкой возврата в меню,
-        или None если напоминаний нет.
-        session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
-                        Должна быть экземпляром `AsyncSession` из SQLAlchemy.
-    """
-    all_reminders = await get_reminders()
-
-    if all_reminders:
-        keyboard = InlineKeyboardBuilder()
-
-        for remind in all_reminders:
-            keyboard.add(InlineKeyboardButton(
-                text=f"ID: {remind.id} | DATA: {remind.time.strftime('%b-%d %H:%M')} | TEXT: {remind.text}",
-                callback_data=f"remind_{remind.id}"))
-
-        keyboard.add(InlineKeyboardButton(text="В начало", callback_data="back_to_menu"))
-
-        return keyboard.adjust(1).as_markup()
-
-    return None
+# async def ready_reminders() -> InlineKeyboardMarkup or None:
+#     """
+#     Создает клавиатуру со списком всех готовых напоминаний, если таковые имеются.
+#
+#     Returns:
+#         InlineKeyboardMarkup: Клавиатура со списком напоминаний и кнопкой возврата в меню,
+#         или None если напоминаний нет.
+#         session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
+#                         Должна быть экземпляром `AsyncSession` из SQLAlchemy.
+#     """
+#     all_reminders = await get_reminders()
+#
+#     if all_reminders:
+#         keyboard = InlineKeyboardBuilder()
+#
+#         for remind in all_reminders:
+#             keyboard.add(InlineKeyboardButton(
+#                 text=f"ID: {remind.id} | DATA: {remind.time.strftime('%b-%d %H:%M')} | TEXT: {remind.text}",
+#                 callback_data=f"remind_{remind.id}"))
+#
+#         keyboard.add(InlineKeyboardButton(text="В начало", callback_data="back_to_menu"))
+#
+#         return keyboard.adjust(1).as_markup()
+#
+#     return None
 
 
 async def remind_menu(remind_id: int, session: AsyncSession) -> InlineKeyboardMarkup:
@@ -85,6 +85,8 @@ async def remind_menu(remind_id: int, session: AsyncSession) -> InlineKeyboardMa
 
     Args:
         remind_id (int): Идентификатор напоминания.
+        session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
+                        Должна быть экземпляром `AsyncSession` из SQLAlchemy
 
     Returns:
         InlineKeyboardMarkup: Клавиатура с информацией о напоминании, кнопками удаления и возврата.
