@@ -1,9 +1,10 @@
 from datetime import datetime
 
 from aiogram import Bot
-from sqlalchemy import select, ScalarResult, delete
+from sqlalchemy import select, ScalarResult, delete, join
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlite import User
 from sqlite.models import Remind
 from tgbot.misc.work_with_group import send_reminders
 
@@ -45,8 +46,15 @@ async def check_remind_sql(bot: Bot, session: AsyncSession):
     ready_remind = await session.scalars(select(Remind).where(Remind.time <= datetime.now()))
     ready_remind = ready_remind.all()
 
-    if ready_remind:
-        await send_reminders(bot, ready_remind, session)
+    # if ready_remind:
+        # await send_reminders(bot, ready_remind, session)
+
+    # ready_remind = await session.scalars(select(Remind, User).join(User, Remind.user_id == User.tg_id)
+    #                                      .where(Remind.time <= datetime.now()))
+    # ready_remind = ready_remind.all()
+    # print(ready_remind)
+    # for rem in ready_remind:
+    #     print(f"{rem.id}, {rem.text}, {rem.tg_id}")
 
 
 async def get_one_remind(id_remind: int, session: AsyncSession) -> Remind:
@@ -78,4 +86,7 @@ async def delete_remind(id_remind: int, session: AsyncSession) -> None:
     await session.commit()
 
 
+async def check_user(user_id: int, session: AsyncSession):
 
+    result = await session.scalar(select(User).where(User.tg_id == user_id))
+    return result is not None

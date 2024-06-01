@@ -1,8 +1,8 @@
 from aiogram.fsm.state import State, StatesGroup
 
-AddEntry: State = State("AddEntry")
+UserForm: State = State("UserForm")
 """
-Состояние для добавления напоминания.
+Состояние для добавления группы куда идти будут напоминания.
 
 Attributes:
     AddEntry: Состояние добавления напоминания.
@@ -21,10 +21,4 @@ class WorkWithRemind(StatesGroup):
     View: State = State()
 
 
-# DelEntry: State = State("DelEntry")
-# """
-# Состояние для удаления напоминания.
-#
-# Attributes:
-#     DelEntry: Состояние удаления напоминания.
-# """
+

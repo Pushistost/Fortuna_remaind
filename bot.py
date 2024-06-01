@@ -13,6 +13,7 @@ from tgbot.config import load_config, Config
 from tgbot.handlers import routers_list
 from tgbot.middlewares.config import ConfigMiddleware
 from tgbot.middlewares.database import DatabaseMiddleware
+from tgbot.middlewares.users import StartCommandMiddleware
 from tgbot.services import broadcaster
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -40,6 +41,7 @@ def register_global_middlewares(dp: Dispatcher, config: Config, session_pool):
     middleware_types = [
         ConfigMiddleware(config),
         DatabaseMiddleware(session_pool),
+        StartCommandMiddleware()
     ]
     for middleware_type in middleware_types:
         dp.message.outer_middleware(middleware_type)

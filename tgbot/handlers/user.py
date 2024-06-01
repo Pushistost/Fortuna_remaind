@@ -1,4 +1,6 @@
 import re
+from typing import Dict, Any
+
 from aiogram import Router
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
@@ -10,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlite import Remind, requests as rq
 from tgbot.filters.callback_datas import BackFromText
 from tgbot.keyboards.reply import start_menu
-from tgbot.misc.states import WorkWithRemind
+from tgbot.misc.states import WorkWithRemind, UserForm
 import tgbot.keyboards.inline as kb
 from tgbot.misc.utils import add_remind
 
@@ -18,16 +20,24 @@ user_router = Router()
 
 
 @user_router.message(CommandStart())
-async def user_start(message: Message) -> None:
+async def user_start(message: Message, new_user: bool) -> None:
     """
     Обрабатывает команду /start для администраторов.
 
     Args:
         message: Объект входящего сообщения.
+        new_user: Параметр указывающий новый это юзер или нет
     """
     await message.answer("Короче правила простые, но на всякий случай повторю:\n"
                          "Тупо пишешь цифру - это будут часы, потом пробел или Shift+Enter"
                          "Далее пишешь текст напоминания", reply_markup=start_menu)
+    if new_user:
+        await message.answer("Вы явно новый пользователь, а значит вам нужно непременно "
+                             "вписать id группы для напоминания, иначе бот не сможет работать. "
+                             "\nКак найти id группы или свой: добавляем этого бота к себе в группу @username_to_id_bot"
+                             "и выберем в меню группу или человека, кликаем - получаем id \nИ последнее: для того,"
+                             " что бы бот отправлял вам в группу напоминание - вам нужно его туда добавить.")
+        await message.answer("Отправьте сюда id группы для напоминаний")
 
 
 @user_router.message(F.text != "Показать записи", F.text.as_("remind"))
