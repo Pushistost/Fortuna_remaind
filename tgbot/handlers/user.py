@@ -10,6 +10,7 @@ from aiogram import F
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlite import Remind, requests as rq
+from sqlite.requests import add_user
 from tgbot.filters.callback_datas import BackFromText
 from tgbot.keyboards.reply import start_menu
 from tgbot.misc.states import WorkWithRemind, UserForm
@@ -28,16 +29,46 @@ async def user_start(message: Message, new_user: bool) -> None:
         message: Объект входящего сообщения.
         new_user: Параметр указывающий новый это юзер или нет
     """
-    await message.answer("Короче правила простые, но на всякий случай повторю:\n"
-                         "Тупо пишешь цифру - это будут часы, потом пробел или Shift+Enter"
+    await message.answer("Короче правила простые, но на всякий случай повторю:\n\n"
+                         "Тупо пишешь цифру - это будут часы, потом пробел или Shift+Enter "
                          "Далее пишешь текст напоминания", reply_markup=start_menu)
     if new_user:
         await message.answer("Вы явно новый пользователь, а значит вам нужно непременно "
                              "вписать id группы для напоминания, иначе бот не сможет работать. "
-                             "\nКак найти id группы или свой: добавляем этого бота к себе в группу @username_to_id_bot"
-                             "и выберем в меню группу или человека, кликаем - получаем id \nИ последнее: для того,"
-                             " что бы бот отправлял вам в группу напоминание - вам нужно его туда добавить.")
+                             "\n\nКак найти id группы или свой: добавляем этого бота к себе "
+                             "в группу @username_to_id_bot и выберем в меню группу или человека, "
+                             "кликаем - получаем id \n\nИ последнее: для того, что бы бот отправлял "
+                             "вам в группу напоминание - вам нужно его туда добавить.")
         await message.answer("Отправьте сюда id группы для напоминаний")
+
+
+@user_router.message(F.text.as_("group_id"), UserForm)
+async def add_group_id(message: Message, group_id: str, state: FSMContext, session: AsyncSession):
+    """
+    Обрабатывает ввод ID группы пользователем и сохраняет его в базе данных.
+
+    Этот обработчик вызывается, когда пользователь находится в состоянии `UserForm.group_id`
+    и отправляет сообщение, содержащее ID группы. Обработчик пытается преобразовать введенное
+    значение в целое число. Если преобразование удачно, ID группы сохраняется в базе данных,
+    состояние FSM очищается и пользователю отправляется подтверждение. Если преобразование
+    не удается, пользователю отправляется сообщение об ошибке.
+
+    Args:
+        message (Message): Входящее сообщение от пользователя.
+        group_id (str): Введенный пользователем ID группы.
+        state (FSMContext): Контекст состояния FSM для пользователя.
+        session (AsyncSession): Сессия SQLAlchemy для взаимодействия с базой данных.
+
+    Raises:
+        ValueError: Если введенное значение не может быть преобразовано в целое число.
+    """
+    try:
+        group_id = int(group_id.strip())
+        await add_user(user_id=message.from_user.id, group_id=int(group_id), session=session)
+        await state.clear()
+        await message.answer(f"Ваш ID группы {group_id} сохранен!")
+    except ValueError:
+        await message.answer(f"Неверный ввод, это должно быть положительное или отрицательное число, попробуйте снова")
 
 
 @user_router.message(F.text != "Показать записи", F.text.as_("remind"))

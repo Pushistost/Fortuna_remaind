@@ -26,5 +26,6 @@ class StartCommandMiddleware(BaseMiddleware):
             if not exist_user:
                 data["new_user"] = True
                 await state.set_state(UserForm)
-
+            else:
+                data["new_user"] = False
         return await handler(event, data)

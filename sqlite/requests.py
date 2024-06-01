@@ -87,6 +87,29 @@ async def delete_remind(id_remind: int, session: AsyncSession) -> None:
 
 
 async def check_user(user_id: int, session: AsyncSession):
-
+    """
+      Проверяет наличие пользователя в базе данных.
+      Args:
+          user_id (int): id пользователя.
+          session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
+                          Должна быть экземпляром `AsyncSession` из SQLAlchemy.
+      Returns:
+          None
+      """
     result = await session.scalar(select(User).where(User.tg_id == user_id))
     return result is not None
+
+
+async def add_user(user_id: int, group_id: int, session: AsyncSession):
+    """
+      Добавляет пользователя в БД вместе с группой для напоминаний
+      Args:
+          user_id (int): id пользователя.
+          group_id (int): id группы
+          session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
+                          Должна быть экземпляром `AsyncSession` из SQLAlchemy.
+      Returns:
+          None
+      """
+    session.add(User(tg_id=user_id, group_id=group_id))
+    await session.commit()
