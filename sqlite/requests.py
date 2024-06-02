@@ -43,18 +43,22 @@ async def check_remind_sql(bot: Bot, session: AsyncSession):
                 Должна быть экземпляром `AsyncSession` из SQLAlchemy.
     :param bot: Экземпляр класса бот
     """
-    ready_remind = await session.scalars(select(Remind).where(Remind.time <= datetime.now()))
-    ready_remind = ready_remind.all()
-
-    # if ready_remind:
-        # await send_reminders(bot, ready_remind, session)
-
-    # ready_remind = await session.scalars(select(Remind, User).join(User, Remind.user_id == User.tg_id)
-    #                                      .where(Remind.time <= datetime.now()))
+    # ready_remind = await session.scalars(select(Remind).where(Remind.time <= datetime.now()))
     # ready_remind = ready_remind.all()
-    # print(ready_remind)
-    # for rem in ready_remind:
-    #     print(f"{rem.id}, {rem.text}, {rem.tg_id}")
+    #
+    # if ready_remind:
+    #     await send_reminders(bot, ready_remind, session)
+    print("work work")
+
+    ready_remind = await session.scalars(select(Remind, User).join(User, Remind.user_id == User.tg_id)
+                                         .where(Remind.time <= datetime.now()))
+    ready_remind = ready_remind.all()
+    print("try to make remind request")
+    print(ready_remind)
+    if ready_remind:
+        print(ready_remind)
+        for rem in ready_remind:
+            print(f"{rem.id}, {rem.text}, {rem.tg_id}")
 
 
 async def get_one_remind(id_remind: int, session: AsyncSession) -> Remind:
@@ -113,3 +117,17 @@ async def add_user(user_id: int, group_id: int, session: AsyncSession):
       """
     session.add(User(tg_id=user_id, group_id=group_id))
     await session.commit()
+
+
+async def get_group_id(user_id: int, session: AsyncSession):
+    """
+      Достает по запросу группу которая привязана к пользователю
+      Args:
+          user_id (int): id пользователя.
+          session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
+                          Должна быть экземпляром `AsyncSession` из SQLAlchemy.
+      Returns:
+          ID группы для напоминания
+      """
+    result = await session.scalar(select(User.group_id).where(User.tg_id == user_id))
+    return result

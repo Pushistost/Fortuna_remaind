@@ -43,7 +43,7 @@ async def send_reminders(bot: Bot, ready_remind_list: ScalarResult, session: Asy
     for remind in ready_remind_list:
         # Отправка напоминания
         await bot.send_message(
-            chat_id=-1002032136082,
+            chat_id=remind.tg_id,
             text=f"*Прошло {remind.hours}ч*:\n\n{markdown_decoration.quote(remind.text)}",
             parse_mode=ParseMode.MARKDOWN_V2
         )

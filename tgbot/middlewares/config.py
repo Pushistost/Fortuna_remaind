@@ -27,17 +27,16 @@ class ConfigMiddleware(BaseMiddleware):
             data: Dict[str, Any],
     ) -> Any:
         """
-        Асинхронный метод для вызова middleware.
+          Дает доступ к config данным обработчикам.
 
-        Параметры:
-            handler: Обработчик, который будет вызван после выполнения middleware.
-            event: Объект сообщения, который обрабатывается.
-            data: Словарь данных, передаваемых в обработчик.
+          Args:
+              handler (Callable[[Message, Dict[str, Any]], Awaitable[Any]]): Следующий обработчик в цепочке middleware.
+              event (Message): Входящее сообщение от пользователя.
+              data (Dict[str, Any]): Дополнительные данные, переданные middleware.
 
-        Возвращает:
-            Результат выполнения обработчика.
+          Returns:
+              Any: Результат выполнения следующего обработчика в цепочке.
         """
-        # Добавляем конфигурацию в данные контекста
         data["config"] = self.config
-        # Вызываем обработчик с обновленными данными
+
         return await handler(event, data)

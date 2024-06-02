@@ -1,25 +1,25 @@
 import re
-from typing import Dict, Any
 
 from aiogram import Router
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from aiogram import F
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from sqlite import Remind, requests as rq
 from sqlite.requests import add_user
 from tgbot.filters.callback_datas import BackFromText
 from tgbot.keyboards.reply import start_menu
 from tgbot.misc.states import WorkWithRemind, UserForm
 import tgbot.keyboards.inline as kb
+from sqlite import Remind, requests as rq
 from tgbot.misc.utils import add_remind
 
 user_router = Router()
 
 
+# Приветствие и настройка группы для напоминаний
 @user_router.message(CommandStart())
 async def user_start(message: Message, new_user: bool) -> None:
     """
@@ -42,12 +42,12 @@ async def user_start(message: Message, new_user: bool) -> None:
         await message.answer("Отправьте сюда id группы для напоминаний")
 
 
-@user_router.message(F.text.as_("group_id"), UserForm)
+@user_router.message(F.text.as_("group_id"), UserForm.Start)
 async def add_group_id(message: Message, group_id: str, state: FSMContext, session: AsyncSession):
     """
     Обрабатывает ввод ID группы пользователем и сохраняет его в базе данных.
 
-    Этот обработчик вызывается, когда пользователь находится в состоянии `UserForm.group_id`
+    Этот обработчик вызывается, когда пользователь находится в состоянии `UserForm.Start`
     и отправляет сообщение, содержащее ID группы. Обработчик пытается преобразовать введенное
     значение в целое число. Если преобразование удачно, ID группы сохраняется в базе данных,
     состояние FSM очищается и пользователю отправляется подтверждение. Если преобразование
@@ -71,6 +71,69 @@ async def add_group_id(message: Message, group_id: str, state: FSMContext, sessi
         await message.answer(f"Неверный ввод, это должно быть положительное или отрицательное число, попробуйте снова")
 
 
+@user_router.message(F.text.as_("group_id"), UserForm.Change)
+async def add_group_id(message: Message, group_id: str, state: FSMContext, session: AsyncSession):
+    """
+    Обрабатывает ввод ID группы пользователем и сохраняет его в базе данных.
+
+    Этот обработчик вызывается, когда пользователь находится в состоянии `UserForm.Change`
+    и отправляет сообщение, содержащее ID группы. Действует так же как и установка группы при старте, разница в том,
+    что тут есть кнопка отмены, что бы человек не застревал в этом состоянии и мог просто отменить смену группы более
+    интуитивным способом.
+
+    Args:
+        message (Message): Входящее сообщение от пользователя.
+        group_id (str): Введенный пользователем ID группы.
+        state (FSMContext): Контекст состояния FSM для пользователя.
+        session (AsyncSession): Сессия SQLAlchemy для взаимодействия с базой данных.
+
+    Raises:
+        ValueError: Если введенное значение не может быть преобразовано в целое число.
+    """
+    try:
+        group_id = int(group_id.strip())
+        await add_user(user_id=message.from_user.id, group_id=int(group_id), session=session)
+        await state.clear()
+        await message.answer(f"Ваш ID группы {group_id} сохранен!")
+    except ValueError:
+        await message.answer(f"Неверный ввод, это должно быть положительное или отрицательное число, "
+                             f"попробуйте снова", reply_markup=kb.jast_go_to_start())
+
+
+@user_router.message(Command("change_group"))
+async def change_group(message: Message, state: FSMContext):
+    """
+    Запускает смену процесс замены группы для напоминаний.
+
+    Args:
+        message (Message): Объект сообщения.
+        state (FSMContext): Контекст состояния FSM для пользователя.
+
+    Returns:
+        None
+    """
+    await message.answer("Отправьте сюда id группы для напоминаний")
+    await state.set_state(UserForm.Change)
+
+
+@user_router.message(Command("get_group"))
+async def get_group(message: Message, session: AsyncSession):
+    """
+    Показывает какая группа привязана к пользователю.
+
+    Args:
+        message (Message): Объект сообщения.
+        session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
+                        Должна быть экземпляром `AsyncSession` из SQLAlchemy.
+
+    Returns:
+        None
+    """
+    group_id = await rq.get_group_id(message.from_user.id, session)
+    await message.answer(f"ID вашей группы для напоминаний:\n\n{group_id}")
+
+
+# Блок просмотра записей и работы с ними
 @user_router.message(F.text != "Показать записи", F.text.as_("remind"))
 async def check_remind(message: Message, remind: str, session: AsyncSession) -> None:
     """
@@ -167,25 +230,6 @@ async def back_from_text(query: CallbackQuery, callback_data: BackFromText,
     await state.set_state(WorkWithRemind.View)
 
 
-@user_router.callback_query(F.data == "delete", WorkWithRemind.View)
-async def delete_remind_handler(query: CallbackQuery, state: FSMContext, session: AsyncSession) -> None:
-    """
-    Удаляет напоминание.
-
-    Args:
-        query (CallbackQuery): Объект входящего callback-запроса.
-        state (FSMContext): Контекст конечного автомата.
-        session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
-                Должна быть экземпляром `AsyncSession` из SQLAlchemy.
-    """
-    data = await state.get_data()
-    rem_id = data.get("rem_id")
-    await rq.delete_remind(rem_id, session)
-    await query.message.edit_text("*Напоминание удалено*\nОбновленный список напоминаний:",
-                                  reply_markup=await kb.reminders(session), parse_mode=ParseMode.MARKDOWN_V2)
-    await state.set_state(WorkWithRemind.Get)
-
-
 @user_router.callback_query(F.data == "back_to_reminders")
 async def beck_to_list_of_remind(query: CallbackQuery, state: FSMContext, session: AsyncSession) -> None:
     """
@@ -213,3 +257,23 @@ async def back_to_start(query: CallbackQuery, state: FSMContext) -> None:
     """
     await query.message.edit_text("Продолжаем работу", reply_markup=None, parse_mode=ParseMode.MARKDOWN_V2)
     await state.clear()
+
+
+# Блок удаления записей
+@user_router.callback_query(F.data == "delete", WorkWithRemind.View)
+async def delete_remind_handler(query: CallbackQuery, state: FSMContext, session: AsyncSession) -> None:
+    """
+    Удаляет напоминание.
+
+    Args:
+        query (CallbackQuery): Объект входящего callback-запроса.
+        state (FSMContext): Контекст конечного автомата.
+        session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
+                Должна быть экземпляром `AsyncSession` из SQLAlchemy.
+    """
+    data = await state.get_data()
+    rem_id = data.get("rem_id")
+    await rq.delete_remind(rem_id, session)
+    await query.message.edit_text("*Напоминание удалено*\nОбновленный список напоминаний:",
+                                  reply_markup=await kb.reminders(session), parse_mode=ParseMode.MARKDOWN_V2)
+    await state.set_state(WorkWithRemind.Get)

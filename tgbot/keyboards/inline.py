@@ -132,7 +132,7 @@ def beck_from_text_bottom(r_id: int) -> InlineKeyboardMarkup:
 
 def jast_go_to_start() -> InlineKeyboardMarkup:
     """
-    Создает клавиатуру с кнопкой для возврата стартовому меню из создания напоминания
+    Создает клавиатуру с кнопкой для возврата стартовому
 
     Returns:
         InlineKeyboardMarkup: Клавиатура с кнопкой "назад".

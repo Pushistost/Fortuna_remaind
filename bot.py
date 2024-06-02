@@ -17,6 +17,8 @@ from tgbot.middlewares.users import StartCommandMiddleware
 from tgbot.services import broadcaster
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+from tgbot.services.commands_menu import set_default_commands
+
 
 async def on_startup(bot: Bot, admin_ids: list[int]):
     await broadcaster.broadcast(bot, admin_ids, "Бот був запущений")
@@ -41,11 +43,13 @@ def register_global_middlewares(dp: Dispatcher, config: Config, session_pool):
     middleware_types = [
         ConfigMiddleware(config),
         DatabaseMiddleware(session_pool),
-        StartCommandMiddleware()
+
     ]
     for middleware_type in middleware_types:
         dp.message.outer_middleware(middleware_type)
         dp.callback_query.outer_middleware(middleware_type)
+
+    dp.message.outer_middleware(StartCommandMiddleware())
 
 
 def setup_logging():
@@ -94,8 +98,8 @@ def get_storage(config):
         return MemoryStorage()
 
 
-# async def set_all_default_commands(bot: Bot):
-#     await set_all_chat_admins_commands(bot)
+async def set_all_default_commands(bot: Bot):
+    await set_default_commands(bot)
 
 
 async def main():
@@ -111,10 +115,11 @@ async def main():
     scheduler = AsyncIOScheduler()
 
     register_global_middlewares(dp, config, async_session)
-    # await set_all_default_commands(bot)
+
     scheduler.add_job(remind_worker,
-                      "interval", seconds=60, timezone='Europe/Moscow', args=(bot, async_session))
+                      "interval", seconds=10, timezone='Europe/Moscow', args=(bot, async_session))
     scheduler.start()
+    await set_default_commands(bot)
     await on_startup(bot, config.tg_bot.admin_ids)
     await dp.start_polling(bot)
     await bot.session.close()
