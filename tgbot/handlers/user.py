@@ -29,8 +29,8 @@ async def user_start(message: Message, new_user: bool) -> None:
         message: Объект входящего сообщения.
         new_user: Параметр указывающий новый это юзер или нет
     """
-    await message.answer("Короче правила простые, но на всякий случай повторю:\n\n"
-                         "Тупо пишешь цифру - это будут часы, потом пробел или Shift+Enter "
+    await message.answer("Правила простые:\n\n"
+                         "Вначале пишешь цифру - это будут часы, потом пробел или Shift+Enter "
                          "Далее пишешь текст напоминания", reply_markup=start_menu)
     if new_user:
         await message.answer("Вы явно новый пользователь, а значит вам нужно непременно "
