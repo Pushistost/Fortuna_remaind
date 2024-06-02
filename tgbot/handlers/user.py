@@ -135,27 +135,34 @@ async def get_group(message: Message, session: AsyncSession):
 
 # Блок просмотра записей и работы с ними
 @user_router.message(F.text != "Показать записи", F.text.as_("remind"))
-async def check_remind(message: Message, remind: str, session: AsyncSession) -> None:
+async def check_remind(message: Message, remind: str, session: AsyncSession, new_user: bool, state: FSMContext) -> None:
     """
     Проверяет и обрабатывает напоминание, переданное в сообщении.
 
     Args:
         message (Message): Объект сообщения.
         remind (str): Текст напоминания.
+        state (FSMContext): Контекст конечного автомата.
+        new_user (bool): Данные в общем словаре новый пользователь или нет
         session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
                         Должна быть экземпляром `AsyncSession` из SQLAlchemy.
 
     Returns:
         None
     """
-    preparing_to_add = re.split(r"[ |\n]", remind, maxsplit=1)
+    if new_user:
+        await state.set_state(UserForm.Start)
+        await message.answer("Отправьте сюда id группы для напоминаний")
 
-    if len(preparing_to_add) == 2 and preparing_to_add[0].isdigit():
-        time = int(preparing_to_add[0])
-        text = preparing_to_add[1]
-        await add_remind(tg_id=message.from_user.id, time=time, remind=text, message=message, session=session)
     else:
-        await message.answer("Не верный формат записи", parse_mode=ParseMode.MARKDOWN_V2)
+        preparing_to_add = re.split(r"[ |\n]", remind, maxsplit=1)
+
+        if len(preparing_to_add) == 2 and preparing_to_add[0].isdigit():
+            time = int(preparing_to_add[0])
+            text = preparing_to_add[1]
+            await add_remind(tg_id=message.from_user.id, time=time, remind=text, message=message, session=session)
+        else:
+            await message.answer("Не верный формат записи", parse_mode=ParseMode.MARKDOWN_V2)
 
 
 @user_router.message(F.text == "Показать записи")

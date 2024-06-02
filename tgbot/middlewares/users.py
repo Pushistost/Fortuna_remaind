@@ -2,7 +2,6 @@ from typing import Callable, Dict, Any, Awaitable
 from aiogram import BaseMiddleware
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlite.requests import check_user
 from tgbot.misc.states import UserForm
