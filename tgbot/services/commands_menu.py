@@ -1,5 +1,5 @@
 from aiogram import Bot
-from aiogram.types import BotCommand, BotCommandScopeChat
+from aiogram.types import BotCommand, BotCommandScopeDefault
 
 
 async def set_default_commands(bot: Bot):
@@ -8,5 +8,5 @@ async def set_default_commands(bot: Bot):
             BotCommand(command="change_group", description="Смена группы для отправки напоминаний"),
             BotCommand(command="get_group", description="Показать id группы для моих напоминаний"),
         ],
-        scope=BotCommandScopeChat(chat_id=258829722)
+        scope=BotCommandScopeDefault()
     )
