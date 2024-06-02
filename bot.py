@@ -21,23 +21,32 @@ from tgbot.services.commands_menu import set_default_commands
 
 
 async def on_startup(bot: Bot, admin_ids: list[int]):
-    await broadcaster.broadcast(bot, admin_ids, "Бот був запущений")
+    await broadcaster.broadcast(bot, admin_ids, "Бот был запущен")
 
 
 async def remind_worker(bot: Bot, session_pool):
+    """
+       Проверяет и отправляет напоминания.
+       Эта функция выполняет проверку напоминаний, которые должны быть отправлены на текущий момент времени.
+       Args:
+           bot (Bot): Экземпляр бота.
+           session_pool: Пул сессий для базы данных, используемый для выполнения операций.
+       Returns:
+           None
+    """
     async with session_pool() as session:
         await check_remind_sql(bot, session)
 
 
 def register_global_middlewares(dp: Dispatcher, config: Config, session_pool):
     """
-    Register global middlewares for the given dispatcher.
-    Global middlewares here are the ones that are applied to all the handlers (you specify the type of update)
+    Регистрация глобальных middleware для заданного диспетчера.
+    Глобальные middleware здесь - это те, которые применяются ко всем хендлерам (вы указываете тип обновления).
 
-    :param dp: The dispatcher instance.
+    :param dp: Экземпляр диспетчера.
     :type dp: Dispatcher
-    :param config: The configuration object from the loaded configuration.
-    :param session_pool: Optional session pool object for the database using SQLAlchemy.
+    :param config: Конфигурационный объект, загруженный из файла конфигурации.
+    :param session_pool: Необязательный пул сессий для базы данных с использованием SQLAlchemy.
     :return: None
     """
     middleware_types = [
@@ -54,19 +63,20 @@ def register_global_middlewares(dp: Dispatcher, config: Config, session_pool):
 
 def setup_logging():
     """
-    Set up logging configuration for the application.
+    Настройка конфигурации логирования для приложения.
 
-    This method initializes the logging configuration for the application.
-    It sets the log level to INFO and configures a basic colorized log for
-    output. The log format includes the filename, line number, log level,
-    timestamp, logger name, and log message.
+    Этот метод инициализирует конфигурацию логирования для приложения.
+    Он устанавливает уровень логирования на INFO и настраивает базовое цветное логирование
+    для вывода. Формат лога включает имя файла, номер строки, уровень логирования,
+    временную метку, имя логгера и сообщение лога.
 
-    Returns:
-        None
+    Возвращает:
+    None
 
-    Example usage:
-        setup_logging()
+    Пример использования:
+    setup_logging()
     """
+
     log_level = logging.INFO
     bl.basic_colorized_config(level=log_level)
 
@@ -80,13 +90,13 @@ def setup_logging():
 
 def get_storage(config):
     """
-    Return storage based on the provided configuration.
+    Возвращает хранилище на основе предоставленной конфигурации.
 
     Args:
-        config (Config): The configuration object.
+        config (Config): Конфигурационный объект.
 
     Returns:
-        Storage: The storage object based on the configuration.
+        Storage: Объект хранилища на основе конфигурации.
 
     """
     if config.tg_bot.use_redis:
@@ -99,10 +109,33 @@ def get_storage(config):
 
 
 async def set_all_default_commands(bot: Bot):
+    """
+    Устанавливает команды бокового меню
+    Args:
+        bot (Bot): Объект бота
+    """
     await set_default_commands(bot)
 
 
 async def main():
+    """
+        Основная функция для запуска бота и планировщика задач.
+
+        Эта функция выполняет следующие действия:
+        1. Настраивает логирование.
+        2. Создает базу данных и все необходимые таблицы.
+        3. Загружает конфигурацию из файла окружения.
+        4. Инициализирует хранилище для состояний FSM.
+        5. Создает экземпляр бота и диспетчера.
+        6. Регистрирует глобальные middlewares.
+        7. Настраивает планировщик для периодической проверки времени отправки напоминаний.
+        8. Устанавливает стандартные команды для бота.
+        9. Выполняет действия при запуске бота.
+        10. Начинает polling для обработки обновлений.
+
+        Returns:
+            None
+        """
     setup_logging()
     await make_base()
     config = load_config(".env")
@@ -117,7 +150,7 @@ async def main():
     register_global_middlewares(dp, config, async_session)
 
     scheduler.add_job(remind_worker,
-                      "interval", seconds=10, timezone='Europe/Moscow', args=(bot, async_session))
+                      "interval", seconds=60, timezone='Europe/Moscow', args=(bot, async_session))
     scheduler.start()
     await set_default_commands(bot)
     await on_startup(bot, config.tg_bot.admin_ids)

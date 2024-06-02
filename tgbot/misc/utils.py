@@ -8,11 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlite.requests import set_remind
 
 
-async def add_remind(time, remind, message: Message, session: AsyncSession) -> None:
+async def add_remind(tg_id: int, time: int, remind: str, message: Message, session: AsyncSession) -> None:
     """
         Добавляет напоминание и отправляет сообщение с подтверждением.
 
         Args:
+            tg_id (int): ID пользователя телеграм
             time (int): Время (в часах), через которое нужно напомнить.
             remind (str): Текст напоминания.
             message (Message): Объект сообщения.
@@ -26,4 +27,4 @@ async def add_remind(time, remind, message: Message, session: AsyncSession) -> N
     remind_time = datetime.now() + timedelta(hours=hours_to_add)
     await message.answer(f"*Запись добавлена*\n\n*Время напоминания*: {remind_time.strftime('%Y %b %d %H:%M')}"
                          f"\n*Сообщение*: {markdown_decoration.quote(text)}", parse_mode=ParseMode.MARKDOWN_V2)
-    await set_remind(data=remind_time, text=text, hours=time, session=session)
+    await set_remind(tg_id=tg_id, data=remind_time, text=text, hours=time, session=session)

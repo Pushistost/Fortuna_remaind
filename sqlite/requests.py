@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from aiogram import Bot
-from sqlalchemy import select, ScalarResult, delete, join
+from sqlalchemy import select, ScalarResult, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from sqlite import User
@@ -20,9 +20,10 @@ async def get_reminders(session: AsyncSession) -> ScalarResult[Remind]:
     return result
 
 
-async def set_remind(data: datetime, text: str, hours: int, session: AsyncSession) -> None:
+async def set_remind(tg_id: int, data: datetime, text: str, hours: int, session: AsyncSession) -> None:
     """
     Устанавливает новое напоминание в базе данных.
+    :param tg_id: Дата и время напоминания.
     :param data: Дата и время напоминания.
     :param text: Текст напоминания.
     :param hours: Сколько часов в таймере
@@ -30,7 +31,7 @@ async def set_remind(data: datetime, text: str, hours: int, session: AsyncSessio
                     Должна быть экземпляром `AsyncSession` из SQLAlchemy.
 
     """
-    session.add(Remind(time=data, text=text, hours=hours))
+    session.add(Remind(user_id=tg_id, time=data, text=text, hours=hours))
     await session.commit()
 
 
@@ -43,22 +44,12 @@ async def check_remind_sql(bot: Bot, session: AsyncSession):
                 Должна быть экземпляром `AsyncSession` из SQLAlchemy.
     :param bot: Экземпляр класса бот
     """
-    # ready_remind = await session.scalars(select(Remind).where(Remind.time <= datetime.now()))
-    # ready_remind = ready_remind.all()
-    #
-    # if ready_remind:
-    #     await send_reminders(bot, ready_remind, session)
-    print("work work")
+    query = select(Remind, User).join(User, Remind.user_id == User.tg_id).where(Remind.time <= datetime.now())
+    result = await session.execute(query)
+    ready_remind = result.fetchall()
 
-    ready_remind = await session.scalars(select(Remind, User).join(User, Remind.user_id == User.tg_id)
-                                         .where(Remind.time <= datetime.now()))
-    ready_remind = ready_remind.all()
-    print("try to make remind request")
-    print(ready_remind)
     if ready_remind:
-        print(ready_remind)
-        for rem in ready_remind:
-            print(f"{rem.id}, {rem.text}, {rem.tg_id}")
+        await send_reminders(bot, ready_remind, session)
 
 
 async def get_one_remind(id_remind: int, session: AsyncSession) -> Remind:

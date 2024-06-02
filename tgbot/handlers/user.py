@@ -153,7 +153,7 @@ async def check_remind(message: Message, remind: str, session: AsyncSession) -> 
     if len(preparing_to_add) == 2 and preparing_to_add[0].isdigit():
         time = int(preparing_to_add[0])
         text = preparing_to_add[1]
-        await add_remind(time=time, remind=text, message=message, session=session)
+        await add_remind(tg_id=message.from_user.id, time=time, remind=text, message=message, session=session)
     else:
         await message.answer("Не верный формат записи", parse_mode=ParseMode.MARKDOWN_V2)
 
