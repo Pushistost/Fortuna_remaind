@@ -34,6 +34,7 @@ class StartCommandMiddleware(BaseMiddleware):
           Returns:
               Any: Результат выполнения следующего обработчика в цепочке.
         """
+        data["new_user"] = False
         if event.text == "/start":
             session = data.get("session")
             state: FSMContext = data.get("state")
@@ -42,7 +43,5 @@ class StartCommandMiddleware(BaseMiddleware):
             if not exist_user:
                 data["new_user"] = True
                 await state.set_state(UserForm.Start)
-            else:
-                data["new_user"] = False
 
         return await handler(event, data)
