@@ -16,7 +16,7 @@ class Base(AsyncAttrs, DeclarativeBase):
 class Remind(Base, TableNameMixin):
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    user_id = mapped_column(BigInteger, ForeignKey("users.tg_id"))
+    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.tg_id"))
     time = mapped_column(DateTime)
     hours: Mapped[int] = mapped_column()
     text: Mapped[str] = mapped_column()
@@ -24,8 +24,8 @@ class Remind(Base, TableNameMixin):
 
 class User(Base, TableNameMixin):
 
-    tg_id = mapped_column(BigInteger, primary_key=True)
-    group_id = mapped_column(BigInteger)
+    tg_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    group_id: Mapped[int] = mapped_column(BigInteger)
 
 
 async def make_base():
