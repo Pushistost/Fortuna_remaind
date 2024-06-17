@@ -25,6 +25,8 @@ async def add_remind(tg_id: int, time: int, remind: str, message: Message, sessi
     hours_to_add = time
     text = remind
     remind_time = datetime.now() + timedelta(hours=hours_to_add)
-    await message.answer(f"*Запись добавлена*\n\n*Время напоминания*: {remind_time.strftime('%Y %b %d %H:%M')}"
+    remind_time_msc_server = remind_time + timedelta(hours=3)
+    await message.answer(f"*Запись добавлена*\n\n*Время напоминания*: "
+                         f"{remind_time_msc_server.strftime('%Y %b %d %H:%M')}"
                          f"\n*Сообщение*: {markdown_decoration.quote(text)}", parse_mode=ParseMode.MARKDOWN_V2)
     await set_remind(tg_id=tg_id, data=remind_time, text=text, hours=time, session=session)

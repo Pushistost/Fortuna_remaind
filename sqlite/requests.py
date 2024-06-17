@@ -9,14 +9,15 @@ from sqlite.models import Remind
 from tgbot.misc.work_with_group import send_reminders
 
 
-async def get_reminders(session: AsyncSession) -> ScalarResult[Remind]:
+async def get_reminders(session: AsyncSession, user_id: int) -> ScalarResult[Remind]:
     """
     Получает все напоминания из базы данных.
     :return: Список объектов напоминаний.
     :param session: Сессия базы данных, используемая для выполнения операций.
                 Должна быть экземпляром `AsyncSession` из SQLAlchemy.
+    :param user_id: (int) id пользователя
     """
-    result = await session.scalars(select(Remind))
+    result = await session.scalars(select(Remind).where(Remind.user_id == user_id))
     return result
 
 

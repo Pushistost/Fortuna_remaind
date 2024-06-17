@@ -29,7 +29,7 @@ async def yes_or_no_keyboard() -> InlineKeyboardMarkup:
     return keyboard.as_markup()
 
 
-async def reminders(session: AsyncSession) -> InlineKeyboardMarkup:
+async def reminders(session: AsyncSession, user_id: int) -> InlineKeyboardMarkup:
     """
     Создает клавиатуру со списком всех напоминаний.
 
@@ -38,7 +38,7 @@ async def reminders(session: AsyncSession) -> InlineKeyboardMarkup:
         session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
                         Должна быть экземпляром `AsyncSession` из SQLAlchemy.
     """
-    all_reminders = await get_reminders(session)
+    all_reminders = await get_reminders(session, user_id)
 
     keyboard = InlineKeyboardBuilder()
 

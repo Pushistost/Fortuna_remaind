@@ -56,6 +56,8 @@ env/
 ENV/
 env.bak/
 venv.bak/
+venv/
+git rm -r --cached venv
 
 # Pyre type checker
 .pyre/

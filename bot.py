@@ -150,7 +150,7 @@ async def main():
     register_global_middlewares(dp, config, async_session)
 
     scheduler.add_job(remind_worker,
-                      "interval", seconds=60, timezone='Europe/Moscow', args=(bot, async_session))
+                      "interval", seconds=60, args=(bot, async_session))
     scheduler.start()
     await set_default_commands(bot)
     await on_startup(bot, config.tg_bot.admin_ids)

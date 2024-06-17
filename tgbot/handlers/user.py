@@ -177,7 +177,7 @@ async def view_remind(message: Message, state: FSMContext, session: AsyncSession
                 Должна быть экземпляром `AsyncSession` из SQLAlchemy.
 
     """
-    await message.answer("Список всех напоминаний:", reply_markup=await kb.reminders(session),
+    await message.answer("Список всех напоминаний:", reply_markup=await kb.reminders(session, message.from_user.id),
                          parse_mode=ParseMode.MARKDOWN_V2)
     await state.set_state(WorkWithRemind.Get)
 
@@ -248,7 +248,8 @@ async def beck_to_list_of_remind(query: CallbackQuery, state: FSMContext, sessio
         session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
                 Должна быть экземпляром `AsyncSession` из SQLAlchemy.
     """
-    await query.message.edit_text("Список всех напоминаний:", reply_markup=await kb.reminders(session),
+    user_id = query.from_user.id
+    await query.message.edit_text("Список всех напоминаний:", reply_markup=await kb.reminders(session, user_id),
                                   parse_mode=ParseMode.MARKDOWN_V2)
     await state.set_state(WorkWithRemind.Get)
 
@@ -278,9 +279,12 @@ async def delete_remind_handler(query: CallbackQuery, state: FSMContext, session
         session (AsyncSession): Сессия базы данных, используемая для выполнения операций.
                 Должна быть экземпляром `AsyncSession` из SQLAlchemy.
     """
+
+    user_id = query.from_user.id
     data = await state.get_data()
     rem_id = data.get("rem_id")
     await rq.delete_remind(rem_id, session)
     await query.message.edit_text("*Напоминание удалено*\nОбновленный список напоминаний:",
-                                  reply_markup=await kb.reminders(session), parse_mode=ParseMode.MARKDOWN_V2)
+                                  reply_markup=await kb.reminders(session, user_id), parse_mode=ParseMode.MARKDOWN_V2)
     await state.set_state(WorkWithRemind.Get)
+
