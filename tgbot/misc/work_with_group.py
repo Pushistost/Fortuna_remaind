@@ -4,7 +4,7 @@ import logging
 from aiogram import Bot
 from aiogram.enums import ParseMode
 from aiogram.utils.text_decorations import markdown_decoration
-from sqlalchemy import ScalarResult, Row
+from sqlalchemy import Row
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlite import Remind, User
