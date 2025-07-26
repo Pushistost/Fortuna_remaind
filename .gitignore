@@ -65,3 +65,6 @@ git rm -r --cached venv
 .env
 cache/
 .DS_Store
+
+# Local SQLite database
+sqlite/db.sqlite3
