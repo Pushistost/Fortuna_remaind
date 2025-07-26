@@ -1,4 +1,5 @@
 from typing import Sequence
+import logging
 
 from aiogram import Bot
 from aiogram.enums import ParseMode
@@ -40,7 +41,7 @@ async def send_reminders(bot: Bot, ready_remind_list: Sequence[Row[tuple[Remind,
         None
     """
 
-    print(f"Reminders is {type(ready_remind_list)}")
+    logging.info(f"Reminders is {type(ready_remind_list)}")
 
     for remind, user in ready_remind_list:
 
