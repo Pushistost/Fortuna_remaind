@@ -68,7 +68,7 @@ async def add_group_id(message: Message, group_id: str, state: FSMContext, sessi
         await state.clear()
         await message.answer(f"Ваш ID группы {group_id} сохранен!")
     except ValueError:
-        await message.answer(f"Неверный ввод, это должно быть положительное или отрицательное число, попробуйте снова")
+        await message.answer("Неверный ввод, это должно быть положительное или отрицательное число, попробуйте снова")
 
 
 @user_router.message(F.text.as_("group_id"), UserForm.Change)
@@ -96,8 +96,8 @@ async def change_group_id(message: Message, group_id: str, state: FSMContext, se
         await state.clear()
         await message.answer(f"Ваш ID группы {group_id} сохранен!")
     except ValueError:
-        await message.answer(f"Неверный ввод, это должно быть положительное или отрицательное число, "
-                             f"попробуйте снова", reply_markup=kb.jast_go_to_start())
+        await message.answer("Неверный ввод, это должно быть положительное или отрицательное число, "
+                             "попробуйте снова", reply_markup=kb.jast_go_to_start())
 
 
 @user_router.message(Command("change_group"))
