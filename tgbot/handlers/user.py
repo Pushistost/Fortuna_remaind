@@ -72,7 +72,7 @@ async def add_group_id(message: Message, group_id: str, state: FSMContext, sessi
 
 
 @user_router.message(F.text.as_("group_id"), UserForm.Change)
-async def add_group_id(message: Message, group_id: str, state: FSMContext, session: AsyncSession):
+async def change_group_id(message: Message, group_id: str, state: FSMContext, session: AsyncSession):
     """
     Обрабатывает ввод ID группы пользователем и сохраняет его в базе данных.
 
